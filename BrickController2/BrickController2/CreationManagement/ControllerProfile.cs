@@ -2,6 +2,8 @@
 using SQLite;
 using SQLiteNetExtensions.Attributes;
 using System.Collections.ObjectModel;
+using System.Threading.Tasks;
+
 
 namespace BrickController2.CreationManagement
 {
@@ -9,6 +11,8 @@ namespace BrickController2.CreationManagement
     {
         private string _name;
         private ObservableCollection<ControllerEvent> _controllerEvents = new ObservableCollection<ControllerEvent>();
+        private ObservableCollection<ControllerMode> _controllerModes = new ObservableCollection<ControllerMode>();
+
 
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -32,9 +36,24 @@ namespace BrickController2.CreationManagement
             set { _controllerEvents = value; RaisePropertyChanged(); }
         }
 
+        [OneToMany(CascadeOperations = CascadeOperation.All)]
+        public ObservableCollection<ControllerMode> ControllerModes
+        {
+            get { return _controllerModes; }
+            set { _controllerModes = value; RaisePropertyChanged(); }
+        }
+
         public override string ToString()
         {
             return Name;
         }
+
+        public async Task<bool> IsModeNameAvailableAsync(string name)
+        {
+            return await Task<bool>.Run(() => { return true; });
+        }
+
+
+
     }
 }

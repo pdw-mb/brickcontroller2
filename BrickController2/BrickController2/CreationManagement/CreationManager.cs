@@ -329,5 +329,17 @@ namespace BrickController2.CreationManagement
                 Sequences.Remove(sequence);
             }
         }
+
+        public async Task<ControllerMode> AddControllerModeAsync(ControllerProfile profile, string modeName)
+        {
+            using (await _asyncLock.LockAsync())
+            {
+                var mode = new ControllerMode { Name = modeName };
+                await _creationRepository.InsertControllerModeAsync(profile, mode);
+
+                return mode;
+            }
+        }
+
     }
 }

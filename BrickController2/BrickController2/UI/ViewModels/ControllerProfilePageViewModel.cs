@@ -46,6 +46,7 @@ namespace BrickController2.UI.ViewModels
             ControllerActionTappedCommand = new SafeCommand<ControllerActionViewModel>(async controllerActionViewModel => await NavigationService.NavigateToAsync<ControllerActionPageViewModel>(new NavigationParameters(("controlleraction", controllerActionViewModel.ControllerAction))));
             DeleteControllerEventCommand = new SafeCommand<ControllerEvent>(async controllerEvent => await DeleteControllerEventAsync(controllerEvent));
             DeleteControllerActionCommand = new SafeCommand<ControllerAction>(async controllerAction => await DeleteControllerActionAsync(controllerAction));
+            NavigateToControllerModesCommand = new SafeCommand(async () => await NavigationService.NavigateToAsync<ControllerModeListPageViewModel>(new NavigationParameters(("controllerprofile", ControllerProfile))));
         }
 
         public override void OnAppearing()
@@ -74,6 +75,7 @@ namespace BrickController2.UI.ViewModels
         public ICommand ControllerActionTappedCommand { get; }
         public ICommand DeleteControllerEventCommand { get; }
         public ICommand DeleteControllerActionCommand { get; }
+        public ICommand NavigateToControllerModesCommand { get; }
 
         private async Task RenameControllerProfileAsync()
         {

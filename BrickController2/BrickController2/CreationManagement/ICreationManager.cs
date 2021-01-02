@@ -61,5 +61,8 @@ namespace BrickController2.CreationManagement
         Task<Sequence> AddSequenceAsync(string sequenceName);
         Task UpdateSequenceAsync(Sequence sequence, string sequenceName, bool loop, bool interpolate, IEnumerable<SequenceControlPoint> controlPoints);
         Task DeleteSequenceAsync(Sequence sequence);
+
+        Task<ControllerMode> AddControllerModeAsync(ControllerProfile profile, string modeName);
+
     }
 }

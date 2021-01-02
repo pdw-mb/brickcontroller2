@@ -32,6 +32,7 @@
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
                 </Grid.RowDefinitions>
 
                 <!-- Header -->
@@ -46,7 +47,7 @@
 
                 <!-- Controller event list -->
                 <CollectionView Grid.Row="1" ItemsSource="{Binding ControllerEvents}" IsGrouped="True" SelectionMode="None">
-                    
+
                     <!-- Controller event -->
                     <CollectionView.GroupHeaderTemplate>
                         <DataTemplate>
@@ -108,10 +109,29 @@
                     </CollectionView.EmptyView>
                 </CollectionView>
 
+                <!-- Footer -->
+                <Grid Grid.Row="2" Style="{StaticResource FooterGridStyle}">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+
+                    <Frame Grid.Column="0" HorizontalOptions="Fill" Padding="2" BackgroundColor="Transparent" HasShadow="False">
+                        <Frame.GestureRecognizers>
+                            <TapGestureRecognizer Command="{Binding NavigateToControllerModesCommand}"/>
+                        </Frame.GestureRecognizers>
+                        <StackLayout Orientation="Vertical" HorizontalOptions="CenterAndExpand">
+                            <controls:ColorImage Source="{extensions:ImageResource Source=ic_link.png}" Style="{StaticResource FooterColorImageStyle}"/>
+                            <Label Text="{extensions:Translate Modes}" FontSize="Small"/>
+                        </StackLayout>
+                    </Frame>
+
+                </Grid>
                 <controls:FloatingActionButton Grid.Row="0" Grid.RowSpan="2" ButtonColor="Red" ImageSource="{extensions:ImageResource Source=ic_add.png}" ImageColor="White" Command="{Binding AddControllerEventCommand}" HorizontalOptions="End" VerticalOptions="End" Margin="10"/>
 
             </Grid>
-
             <controls:Dialogs x:Name="Dialogs" AbsoluteLayout.LayoutBounds="0, 0, 1, 1" AbsoluteLayout.LayoutFlags="All"/>
 
         </AbsoluteLayout>

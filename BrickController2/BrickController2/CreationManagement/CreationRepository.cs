@@ -31,6 +31,7 @@ namespace BrickController2.CreationManagement
             await _databaseConnection.CreateTableAsync<ControllerProfile>();
             await _databaseConnection.CreateTableAsync<ControllerEvent>();
             await _databaseConnection.CreateTableAsync<ControllerAction>();
+            await _databaseConnection.CreateTableAsync<ControllerMode>();
             await _databaseConnection.CreateTableAsync<Sequence>();
             _inited = true;
         }
@@ -198,5 +199,22 @@ namespace BrickController2.CreationManagement
                 await _databaseConnection.DeleteAsync(sequence, true);
             }
         }
+
+        public async Task InsertControllerModeAsync(ControllerProfile controllerProfile, ControllerMode controllerMode)
+        {
+            using (await _lock.LockAsync())
+            {
+                await _databaseConnection.InsertAsync(controllerMode);
+
+                if (controllerProfile.ControllerModes == null)
+                {
+                    controllerProfile.ControllerModes = new ObservableCollection<ControllerMode>();
+                }
+
+                controllerProfile.ControllerModes.Add(controllerMode);
+                await _databaseConnection.UpdateWithChildrenAsync(controllerProfile);
+            }
+        }
+
     }
 }
