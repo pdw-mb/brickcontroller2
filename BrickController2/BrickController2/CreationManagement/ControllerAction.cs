@@ -1,6 +1,7 @@
 ﻿using BrickController2.Helpers;
 using SQLite;
 using SQLiteNetExtensions.Attributes;
+using System.Collections.Generic;
 
 namespace BrickController2.CreationManagement
 {
@@ -19,6 +20,8 @@ namespace BrickController2.CreationManagement
         private int _servoBaseAngle;
         private int _stepperAngle;
         private string _sequenceName;
+        private string _modeName;
+        private IDictionary<string, bool> _modeFilters = new Dictionary<string, bool>();
 
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -106,6 +109,21 @@ namespace BrickController2.CreationManagement
             get { return _sequenceName; }
             set { _sequenceName = value; RaisePropertyChanged(); }
         }
+
+        public string ModeName
+        {
+            get { return _modeName; }
+            set { _modeName = value; RaisePropertyChanged(); }
+        }
+
+        [TextBlob(nameof(ModeFiltersBlobbed))]
+        public IDictionary<string, bool> ModeFilters
+        {
+            get { return _modeFilters; }
+            set { _modeFilters = value ?? new Dictionary<string, bool>(); RaisePropertyChanged(); }
+        }
+
+        public string ModeFiltersBlobbed { get; set; }
 
         public override string ToString()
         {

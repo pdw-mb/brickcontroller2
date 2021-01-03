@@ -6,6 +6,7 @@ using BrickController2.UI.Services.Navigation;
 using BrickController2.UI.Services.Preferences;
 using BrickController2.UI.Services.Translation;
 using System;
+using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading;
@@ -59,6 +60,8 @@ namespace BrickController2.UI.ViewModels
                 Action.ServoBaseAngle = ControllerAction.ServoBaseAngle;
                 Action.StepperAngle = ControllerAction.StepperAngle;
                 Action.SequenceName = ControllerAction.SequenceName;
+                Action.ModeName = ControllerAction.ModeName;
+                Action.ModeFilters = ControllerAction.ModeFilters;
             }
             else
             {
@@ -76,6 +79,7 @@ namespace BrickController2.UI.ViewModels
                 Action.ServoBaseAngle = 0;
                 Action.StepperAngle = 90;
                 Action.SequenceName = string.Empty;
+                Action.ModeName = string.Empty;
             }
 
             SaveControllerActionCommand = new SafeCommand(async () => await SaveControllerActionAsync(), () => SelectedDevice != null && !_dialogService.IsDialogOpen);
@@ -85,16 +89,40 @@ namespace BrickController2.UI.ViewModels
             OpenChannelSetupCommand = new SafeCommand(async () => await OpenChannelSetupAsync(), () => SelectedDevice != null);
             SelectButtonTypeCommand = new SafeCommand(async () => await SelectButtonTypeAsync());
             SelectSequenceCommand = new SafeCommand(async () => await SelectSequenceAsync());
+            SelectControllerModeCommand = new SafeCommand(async () => await SelectControllerModeAsync());
             OpenSequenceEditorCommand = new SafeCommand(async () => await OpenSequenceEditorAsync());
             SelectAxisTypeCommand = new SafeCommand(async () => await SelectAxisTypeAsync());
             SelectAxisCharacteristicCommand = new SafeCommand(async () => await SelectAxisCharacteristicAsync());
+            SelectModeFilterCommand = new SafeCommand<string>(async (mode) => await SelectModeFilterAsync(mode));
         }
 
         public ObservableCollection<Device> Devices => _deviceManager.Devices;
         public ObservableCollection<string> Sequences => new ObservableCollection<string>(_creationManager.Sequences.Select(s => s.Name).ToArray());
+        public ObservableCollection<string> ControllerModes => new ObservableCollection<string>(ControllerEvent.ControllerProfile.ControllerModes.Select(m => m.Name).ToArray());
 
         public ControllerEvent ControllerEvent { get; }
         public ControllerAction ControllerAction { get; }
+
+        public IReadOnlyDictionary<string, Nullable<bool>> ModeFilters {
+            get
+            {
+                var d = new Dictionary<string, Nullable<bool>>();
+                foreach (string mode in ControllerModes)
+                {
+                    bool b;
+                    if (Action.ModeFilters.TryGetValue(mode, out b))
+                    {
+                        d[mode] = b;
+                    }
+                    else
+                    {
+                        d[mode] = null;
+                    }
+                }
+                return d;
+            }
+        }
+            
 
         public Device SelectedDevice
         {
@@ -122,9 +150,11 @@ namespace BrickController2.UI.ViewModels
         public ICommand OpenChannelSetupCommand { get; }
         public ICommand SelectButtonTypeCommand { get; }
         public ICommand SelectSequenceCommand { get; }
+        public ICommand SelectControllerModeCommand { get; }
         public ICommand OpenSequenceEditorCommand { get; }
         public ICommand SelectAxisTypeCommand { get; }
         public ICommand SelectAxisCharacteristicCommand { get; }
+        public ICommand SelectModeFilterCommand { get; }
 
         public override void OnAppearing()
         {
@@ -302,6 +332,31 @@ namespace BrickController2.UI.ViewModels
             }
         }
 
+        private async Task SelectControllerModeAsync()
+        {
+            if (ControllerModes.Any())
+            {
+                var result = await _dialogService.ShowSelectionDialogAsync(
+                    ControllerModes,
+                    Translate("SelectMode"),
+                    Translate("Cancel"),
+                    _disappearingTokenSource.Token);
+
+                if (result.IsOk)
+                {
+                    Action.ModeName = result.SelectedItem;
+                }
+            }
+            else
+            {
+                await _dialogService.ShowMessageBoxAsync(
+                    Translate("Warning"),
+                    Translate("NoModes"),
+                    Translate("Ok"),
+                    _disappearingTokenSource.Token);
+            }
+        }
+
         private async Task SelectAxisTypeAsync()
         {
             var result = await _dialogService.ShowSelectionDialogAsync(
@@ -327,6 +382,20 @@ namespace BrickController2.UI.ViewModels
             if (result.IsOk)
             {
                 Action.AxisCharacteristic = (ControllerAxisCharacteristic)Enum.Parse(typeof(ControllerAxisCharacteristic), result.SelectedItem);
+            }
+        }
+
+        private async Task SelectModeFilterAsync(string mode)
+        {
+            var result = await _dialogService.ShowSelectionDialogAsync(
+                new List<string>(){ "When On", "When Off", "Ignore"},
+                Translate("ModeFilterState"),
+                Translate("Cancel"),
+                _disappearingTokenSource.Token);
+
+            if (result.IsOk)
+            {
+                //Action.AxisCharacteristic = (ControllerAxisCharacteristic)Enum.Parse(typeof(ControllerAxisCharacteristic), result.SelectedItem);
             }
         }
     }
