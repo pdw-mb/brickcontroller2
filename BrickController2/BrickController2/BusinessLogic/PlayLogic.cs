@@ -258,7 +258,7 @@ namespace BrickController2.BusinessLogic
             {
                 if (Math.Abs(axisValue) <= axisDeadZone)
                 {
-                    return (false, 0);
+                    return (true, 0);
                 }
 
                 if (axisValue < 0)
@@ -271,6 +271,8 @@ namespace BrickController2.BusinessLogic
                 }
             }
 
+            axisValue = controllerAction.AxisActiveZonePercent > 0 ? axisValue * 100F / controllerAction.AxisActiveZonePercent : axisValue;
+            
             if (controllerAction.AxisCharacteristic == ControllerAxisCharacteristic.Exponential)
             {
                 // Cheat :)

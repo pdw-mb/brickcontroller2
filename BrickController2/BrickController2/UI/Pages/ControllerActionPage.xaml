@@ -278,22 +278,37 @@
                                         <Setter Property="IsVisible" Value="True"/>
                                     </DataTrigger>
                                 </StackLayout.Triggers>
-                                <Grid>
-                                    <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="2*"/>
-                                        <ColumnDefinition Width="3*"/>
-                                    </Grid.ColumnDefinitions>
+                    
 
-                                    <Label Grid.Column="0" Text="{extensions:Translate AxisDeadZone}"/>
-                                    <StackLayout Grid.Column="1" Orientation="Horizontal">
-                                        <Slider Value="{Binding Action.AxisDeadZonePercent}" Minimum="0" Maximum="100" HorizontalOptions="FillAndExpand" MinimumTrackColor="LightGray"/>
-                                        <Label Text="{Binding Action.AxisDeadZonePercent}" WidthRequest="35" HorizontalOptions="End" HorizontalTextAlignment="End"/>
-                                        <Label Text="%"/>
-                                    </StackLayout>
-                                </Grid>
+                                    <Grid Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="3*"/>
+                                        </Grid.ColumnDefinitions>
 
-                                <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
-                            </StackLayout>
+                                        <Label Grid.Column="0" Text="{extensions:Translate AxisActiveZone}"/>
+                                        <StackLayout Grid.Column="1" Orientation="Horizontal">
+                                            <Slider Value="{Binding Action.AxisActiveZonePercent}" Maximum="100" Minimum="10" HorizontalOptions="FillAndExpand" MinimumTrackColor="LightGray"/>
+                                            <Label Text="{Binding Action.AxisActiveZonePercent}" WidthRequest="35" HorizontalOptions="End" HorizontalTextAlignment="End"/>
+                                            <Label Text="%"/>
+                                        </StackLayout>
+                                    </Grid>
+
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="2*"/>
+                                            <ColumnDefinition Width="3*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <Label Grid.Column="0" Text="{extensions:Translate AxisDeadZone}"/>
+                                        <StackLayout Grid.Column="1" Orientation="Horizontal">
+                                            <Slider Value="{Binding Action.AxisDeadZonePercent}" Minimum="0" Maximum="100" HorizontalOptions="FillAndExpand" MinimumTrackColor="LightGray"/>
+                                            <Label Text="{Binding Action.AxisDeadZonePercent}" WidthRequest="35" HorizontalOptions="End" HorizontalTextAlignment="End"/>
+                                            <Label Text="%"/>
+                                        </StackLayout>
+                                    </Grid>
+
+                                    <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
                         </StackLayout>
                         <!-- Mode selector -->
                         <StackLayout Orientation="Vertical" IsVisible="False">
@@ -339,6 +354,10 @@
                                 </DataTemplate>
                             </CollectionView.ItemTemplate>
                         </CollectionView>
+                       
+
+                            <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
+                        </StackLayout>
 
                     </StackLayout>
                 </ScrollView>

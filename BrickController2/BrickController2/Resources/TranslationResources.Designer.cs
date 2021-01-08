@@ -214,7 +214,16 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Axis characteristic.
+        ///   Looks up a localized string similar to Joy active zone.
+        /// </summary>
+        internal static string AxisActiveZone {
+            get {
+                return ResourceManager.GetString("AxisActiveZone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Joy characteristic.
         /// </summary>
         internal static string AxisCharacteristic {
             get {
@@ -223,11 +232,20 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to Axis dead zone.
+        ///   Looks up a localized string similar to Joy dead zone.
         /// </summary>
         internal static string AxisDeadZone {
             get {
                 return ResourceManager.GetString("AxisDeadZone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Joy type.
+        /// </summary>
+        internal static string AxisType {
+            get {
+                return ResourceManager.GetString("AxisType", resourceCulture);
             }
         }
         
