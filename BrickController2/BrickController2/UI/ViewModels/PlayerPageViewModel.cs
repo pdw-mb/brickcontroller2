@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Input;
+using System.Collections.ObjectModel;
 
 namespace BrickController2.UI.ViewModels
 {
@@ -76,6 +77,8 @@ namespace BrickController2.UI.ViewModels
 
         public int BuWizzOutputLevel { get; set; } = 1;
         public int BuWizz2OutputLevel { get; set; } = 1;
+
+        public ObservableCollection<ControllerModeState> ControllerModeStates => _playLogic.ControllerModeStates;
 
         public override async void OnAppearing()
         {

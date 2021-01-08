@@ -5,6 +5,8 @@ using BrickController2.UI.Services.Dialog;
 using BrickController2.UI.Services.Navigation;
 using BrickController2.UI.Services.Preferences;
 using BrickController2.UI.Services.Translation;
+using BrickController2.Helpers;
+
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -60,8 +62,8 @@ namespace BrickController2.UI.ViewModels
                 Action.ServoBaseAngle = ControllerAction.ServoBaseAngle;
                 Action.StepperAngle = ControllerAction.StepperAngle;
                 Action.SequenceName = ControllerAction.SequenceName;
-                Action.ModeName = ControllerAction.ModeName;
-                Action.ModeFilters = ControllerAction.ModeFilters;
+                Action.ControllerModeName = ControllerAction.ControllerModeName;
+                Action.ControllerActionModeFilters = new Dictionary<string,ControllerActionModeFilterType>(ControllerAction.ControllerActionModeFilters);
             }
             else
             {
@@ -79,8 +81,11 @@ namespace BrickController2.UI.ViewModels
                 Action.ServoBaseAngle = 0;
                 Action.StepperAngle = 90;
                 Action.SequenceName = string.Empty;
-                Action.ModeName = string.Empty;
+                Action.ControllerActionModeFilters = new Dictionary<string, ControllerActionModeFilterType>();
+
+
             }
+            PopulateControllerActionModeFiltersViewModel();
 
             SaveControllerActionCommand = new SafeCommand(async () => await SaveControllerActionAsync(), () => SelectedDevice != null && !_dialogService.IsDialogOpen);
             SelectDeviceCommand = new SafeCommand(async () => await SelectDeviceAsync());
@@ -93,36 +98,36 @@ namespace BrickController2.UI.ViewModels
             OpenSequenceEditorCommand = new SafeCommand(async () => await OpenSequenceEditorAsync());
             SelectAxisTypeCommand = new SafeCommand(async () => await SelectAxisTypeAsync());
             SelectAxisCharacteristicCommand = new SafeCommand(async () => await SelectAxisCharacteristicAsync());
-            SelectModeFilterCommand = new SafeCommand<string>(async (mode) => await SelectModeFilterAsync(mode));
+            SelectModeFilterCommand = new SafeCommand<ControllerActionModeFilterViewModel>(async (mode) => await SelectModeFilterAsync(mode));
         }
 
         public ObservableCollection<Device> Devices => _deviceManager.Devices;
         public ObservableCollection<string> Sequences => new ObservableCollection<string>(_creationManager.Sequences.Select(s => s.Name).ToArray());
-        public ObservableCollection<string> ControllerModes => new ObservableCollection<string>(ControllerEvent.ControllerProfile.ControllerModes.Select(m => m.Name).ToArray());
 
+        public ObservableCollection<string> ControllerModes => new ObservableCollection<string>(ControllerEvent.ControllerProfile.ControllerModes.Select(m => m.Name).ToArray());
         public ControllerEvent ControllerEvent { get; }
         public ControllerAction ControllerAction { get; }
 
-        public IReadOnlyDictionary<string, Nullable<bool>> ModeFilters {
-            get
+        public ObservableCollection<ControllerActionModeFilterViewModel> ControllerActionModeFiltersViewModel { get; } = new ObservableCollection<ControllerActionModeFilterViewModel>();
+
+
+        private void PopulateControllerActionModeFiltersViewModel()
+        {
+            ControllerActionModeFiltersViewModel.Clear();
+            foreach (var controllerMode in ControllerEvent.ControllerProfile.ControllerModes)
             {
-                var d = new Dictionary<string, Nullable<bool>>();
-                foreach (string mode in ControllerModes)
+                ControllerActionModeFilterType state;
+                if (Action.ControllerActionModeFilters.TryGetValue(controllerMode.Name, out state))
                 {
-                    bool b;
-                    if (Action.ModeFilters.TryGetValue(mode, out b))
-                    {
-                        d[mode] = b;
-                    }
-                    else
-                    {
-                        d[mode] = null;
-                    }
+                    ControllerActionModeFiltersViewModel.Add(new ControllerActionModeFilterViewModel(controllerMode, state));
                 }
-                return d;
+                else
+                {
+                    ControllerActionModeFiltersViewModel.Add(new ControllerActionModeFilterViewModel(controllerMode, ControllerActionModeFilterType.Ignore));
+                }
             }
         }
-            
+
 
         public Device SelectedDevice
         {
@@ -201,11 +206,13 @@ namespace BrickController2.UI.ViewModels
                             Action.MaxServoAngle,
                             Action.ServoBaseAngle,
                             Action.StepperAngle,
-                            Action.SequenceName);
+                            Action.SequenceName,
+                            Action.ControllerModeName,
+                            Action.ControllerActionModeFilters);
                     }
                     else
                     {
-                        await _creationManager.AddOrUpdateControllerActionAsync(
+                        await _creationManager.AddControllerActionAsync(
                             ControllerEvent,
                             Action.DeviceId,
                             Action.Channel,
@@ -219,7 +226,9 @@ namespace BrickController2.UI.ViewModels
                             Action.MaxServoAngle,
                             Action.ServoBaseAngle,
                             Action.StepperAngle,
-                            Action.SequenceName);
+                            Action.SequenceName,
+                            Action.ControllerModeName,
+                            Action.ControllerActionModeFilters);
                     }
                 },
                 Translate("Saving"));
@@ -344,7 +353,7 @@ namespace BrickController2.UI.ViewModels
 
                 if (result.IsOk)
                 {
-                    Action.ModeName = result.SelectedItem;
+                    Action.ControllerModeName = result.SelectedItem;
                 }
             }
             else
@@ -385,17 +394,49 @@ namespace BrickController2.UI.ViewModels
             }
         }
 
-        private async Task SelectModeFilterAsync(string mode)
+        private async Task SelectModeFilterAsync(ControllerActionModeFilterViewModel camfvm)
         {
             var result = await _dialogService.ShowSelectionDialogAsync(
-                new List<string>(){ "When On", "When Off", "Ignore"},
+                Enum.GetNames(typeof(ControllerActionModeFilterType)),
                 Translate("ModeFilterState"),
                 Translate("Cancel"),
                 _disappearingTokenSource.Token);
 
             if (result.IsOk)
             {
-                //Action.AxisCharacteristic = (ControllerAxisCharacteristic)Enum.Parse(typeof(ControllerAxisCharacteristic), result.SelectedItem);
+                Action.ControllerActionModeFilters[camfvm.ControllerMode.Name] =  (ControllerActionModeFilterType)Enum.Parse(typeof(ControllerActionModeFilterType), result.SelectedItem);
+                PopulateControllerActionModeFiltersViewModel();
+            }
+        }
+
+        public class ControllerActionModeFilterViewModel : NotifyPropertyChangedSource
+        {
+
+            public ControllerActionModeFilterViewModel(ControllerMode controllerMode, ControllerActionModeFilterType state)
+            {
+                ControllerMode = controllerMode;
+                _state = state;
+            }
+
+            private ControllerActionModeFilterType _state;
+            public ControllerMode ControllerMode { get; }
+            public ControllerActionModeFilterType State { 
+                get { 
+                    return _state;  
+                } 
+                set { 
+                    _state = value; 
+                    RaisePropertyChanged();
+                    RaisePropertyChanged("StateName");
+                } 
+            }
+
+            public string StateName
+            {
+                get
+                {
+                    return Enum.GetName(typeof(ControllerActionModeFilterType), State);
+                }
             }
         }
     }

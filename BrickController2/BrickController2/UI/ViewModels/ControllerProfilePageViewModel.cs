@@ -126,7 +126,7 @@ namespace BrickController2.UI.ViewModels
                         _disappearingTokenSource.Token);
                     return;
                 }
-                /*
+                
                 var result = await _dialogService.ShowGameControllerEventDialogAsync(
                     Translate("Controller"),
                     Translate("PressButtonOrMoveJoy"),
@@ -142,14 +142,15 @@ namespace BrickController2.UI.ViewModels
 
                     await NavigationService.NavigateToAsync<ControllerActionPageViewModel>(new NavigationParameters(("controllerevent", controllerEvent)));
                 }
-                */
-                ControllerEvent controllerEvent = null;
+
+/*                ControllerEvent controllerEvent = null;
                 await _dialogService.ShowProgressDialogAsync(
                     false,
                     async (progressDialog, token) => controllerEvent = await _creationManager.AddOrGetControllerEventAsync(ControllerProfile, PlatformServices.GameController.GameControllerEventType.Button, "A"),
                     Translate("Creating"));
 
                 await NavigationService.NavigateToAsync<ControllerActionPageViewModel>(new NavigationParameters(("controllerevent", controllerEvent)));
+  */              
             }
             catch (OperationCanceledException)
             {

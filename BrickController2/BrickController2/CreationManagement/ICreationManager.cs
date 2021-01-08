@@ -25,7 +25,7 @@ namespace BrickController2.CreationManagement
         Task<ControllerEvent> AddOrGetControllerEventAsync(ControllerProfile controllerProfile, GameControllerEventType eventType, string eventCode);
         Task DeleteControllerEventAsync(ControllerEvent controllerEvent);
 
-        Task<ControllerAction> AddOrUpdateControllerActionAsync(
+        Task<ControllerAction> AddControllerActionAsync(
             ControllerEvent controllerEvent,
             string deviceId,
             int channel,
@@ -39,7 +39,9 @@ namespace BrickController2.CreationManagement
             int maxServoAngle,
             int servoBaseAngle,
             int stepperAngle,
-            string sequenceName);
+            string sequenceName,
+            string controllerModeName,
+            Dictionary<string,ControllerActionModeFilterType> controllerModeFilters);
         Task DeleteControllerActionAsync(ControllerAction controllerAction);
         Task UpdateControllerActionAsync(
             ControllerAction controllerAction,
@@ -55,7 +57,9 @@ namespace BrickController2.CreationManagement
             int maxServoAngle,
             int servoBaseAngle,
             int stepperAngle,
-            string sequenceName);
+            string sequenceName,
+            string controllerModeName,
+            Dictionary<string, ControllerActionModeFilterType> controllerModeFilters);
 
         Task<bool> IsSequenceNameAvailableAsync(string sequenceName);
         Task<Sequence> AddSequenceAsync(string sequenceName);

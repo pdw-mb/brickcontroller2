@@ -1,8 +1,10 @@
 ﻿using BrickController2.CreationManagement;
 using BrickController2.DeviceManagement;
 using BrickController2.PlatformServices.GameController;
+
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 
 namespace BrickController2.BusinessLogic
@@ -26,10 +28,14 @@ namespace BrickController2.BusinessLogic
             _creationManager = creationManager;
             _deviceManager = deviceManager;
             _sequencePlayer = sequencePlayer;
+            ControllerModeStates = new ObservableCollection<ControllerModeState>();
+
         }
 
         public ControllerProfile ActiveProfile { get; set; }
 
+        public ObservableCollection<ControllerModeState> ControllerModeStates { get; set; }
+            
         public CreationValidationResult ValidateCreation(Creation creation)
         {
             var deviceIds = creation.GetDeviceIds();
@@ -61,12 +67,23 @@ namespace BrickController2.BusinessLogic
 
         public void StartPlay()
         {
+            resetControllerModeStates();
             _sequencePlayer.StartPlayer();
         }
 
         public void StopPlay()
         {
             _sequencePlayer.StopPlayer();
+        }
+
+        private void resetControllerModeStates()
+        {
+            ControllerModeStates.Clear();
+            foreach (var mode in ActiveProfile.ControllerModes)
+            {
+                ControllerModeStates.Add(new ControllerModeState(mode.Name, false));
+            }
+
         }
 
         public void ProcessGameControllerEvent(GameControllerEventArgs e)
@@ -88,6 +105,19 @@ namespace BrickController2.BusinessLogic
                             var device = _deviceManager.GetDeviceById(controllerAction.DeviceId);
                             var channel = controllerAction.Channel;
 
+                            bool ignore = false;
+                            foreach (var mf in controllerAction.ControllerActionModeFilters)
+                            {
+                                var ms = ControllerModeStates.First(ms => ms.Name == mf.Key);
+                                if (mf.Value == ControllerActionModeFilterType.WhenOn && !ms.State || mf.Value == ControllerActionModeFilterType.WhenOff && ms.State)
+                                {
+                                    ignore = true;
+                                }
+                            }
+                            if (ignore)
+                            {
+                                continue;
+                            }
                             if (gameControllerEvent.Key.EventType == GameControllerEventType.Button)
                             {
                                 var isPressed = gameControllerEvent.Value > 0.5;
@@ -184,6 +214,12 @@ namespace BrickController2.BusinessLogic
                         _sequencePlayer.ToggleSequence(controllerAction.DeviceId, controllerAction.Channel, sequence);
                     }
                     break;
+
+                case ControllerButtonType.ToggleMode:
+                    var cms = ControllerModeStates.First(cms => cms.Name == controllerAction.ControllerModeName);
+                    cms.State = !cms.State;
+                    break;
+
             }
 
             SetPreviousOutput(controllerAction, currentOutput);

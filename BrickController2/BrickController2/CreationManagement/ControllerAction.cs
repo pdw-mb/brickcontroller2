@@ -20,8 +20,8 @@ namespace BrickController2.CreationManagement
         private int _servoBaseAngle;
         private int _stepperAngle;
         private string _sequenceName;
-        private string _modeName;
-        private IDictionary<string, bool> _modeFilters = new Dictionary<string, bool>();
+        private string _controllerModeName;
+        private Dictionary<string, ControllerActionModeFilterType> _controllerActionModeFilters = new Dictionary<string, ControllerActionModeFilterType>();
 
         [PrimaryKey, AutoIncrement]
         public int Id { get; set; }
@@ -110,20 +110,23 @@ namespace BrickController2.CreationManagement
             set { _sequenceName = value; RaisePropertyChanged(); }
         }
 
-        public string ModeName
+        public string ControllerModeName
         {
-            get { return _modeName; }
-            set { _modeName = value; RaisePropertyChanged(); }
+            get { return _controllerModeName; }
+            set { _controllerModeName = value; RaisePropertyChanged(); }
         }
 
-        [TextBlob(nameof(ModeFiltersBlobbed))]
-        public IDictionary<string, bool> ModeFilters
+        [TextBlob(nameof(ControllerActionModeFiltersBlobbed))]
+        public Dictionary<string, ControllerActionModeFilterType> ControllerActionModeFilters
         {
-            get { return _modeFilters; }
-            set { _modeFilters = value ?? new Dictionary<string, bool>(); RaisePropertyChanged(); }
+            get { return _controllerActionModeFilters; }
+            set { _controllerActionModeFilters = value ?? new Dictionary<string, ControllerActionModeFilterType>(); RaisePropertyChanged(); }
         }
 
-        public string ModeFiltersBlobbed { get; set; }
+        private string _camfb;
+        public string ControllerActionModeFiltersBlobbed {
+            get { return _camfb; }
+            set { _camfb = value; } }
 
         public override string ToString()
         {

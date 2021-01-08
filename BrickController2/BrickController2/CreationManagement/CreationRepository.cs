@@ -163,7 +163,7 @@ namespace BrickController2.CreationManagement
         {
             using (await _lock.LockAsync())
             {
-                await _databaseConnection.UpdateAsync(controllerAction);
+                await _databaseConnection.UpdateWithChildrenAsync(controllerAction);
             }
         }
 

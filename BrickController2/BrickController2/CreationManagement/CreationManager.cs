@@ -141,7 +141,7 @@ namespace BrickController2.CreationManagement
             }
         }
 
-        public async Task<ControllerAction> AddOrUpdateControllerActionAsync(
+        public async Task<ControllerAction> AddControllerActionAsync(
             ControllerEvent controllerEvent,
             string deviceId,
             int channel,
@@ -155,47 +155,31 @@ namespace BrickController2.CreationManagement
             int maxServoAngle,
             int servoBaseAngle,
             int stepperAngle,
-            string sequenceName)
+            string sequenceName,
+            string controllerModeName,
+            Dictionary<string,ControllerActionModeFilterType> controllerActionModeFilters)
         {
             using (await _asyncLock.LockAsync())
             {
-                var controllerAction = controllerEvent.ControllerActions.FirstOrDefault(ca => ca.DeviceId == deviceId && ca.Channel == channel);
-                if (controllerAction != null)
+                var controllerAction = new ControllerAction
                 {
-                    controllerAction.IsInvert = isInvert;
-                    controllerAction.ButtonType = buttonType;
-                    controllerAction.AxisType = axisType;
-                    controllerAction.AxisCharacteristic = axisCharacteristic;
-                    controllerAction.MaxOutputPercent = maxOutputPercent;
-                    controllerAction.AxisDeadZonePercent = axisDeadZonePercent;
-                    controllerAction.ChannelOutputType = channelOutputType;
-                    controllerAction.MaxServoAngle = maxServoAngle;
-                    controllerAction.ServoBaseAngle = servoBaseAngle;
-                    controllerAction.StepperAngle = stepperAngle;
-                    controllerAction.SequenceName = sequenceName;
-                    await _creationRepository.UpdateControllerActionAsync(controllerAction);
-                }
-                else
-                {
-                    controllerAction = new ControllerAction
-                    {
-                        DeviceId = deviceId,
-                        Channel = channel,
-                        IsInvert = isInvert,
-                        ButtonType = buttonType,
-                        AxisType = axisType,
-                        AxisCharacteristic = axisCharacteristic,
-                        MaxOutputPercent = maxOutputPercent,
-                        AxisDeadZonePercent = axisDeadZonePercent,
-                        ChannelOutputType = channelOutputType,
-                        MaxServoAngle = maxServoAngle,
-                        ServoBaseAngle = servoBaseAngle,
-                        StepperAngle = stepperAngle,
-                        SequenceName = sequenceName
-                    };
-                    await _creationRepository.InsertControllerActionAsync(controllerEvent, controllerAction);
-                }
-
+                    DeviceId = deviceId,
+                    Channel = channel,
+                    IsInvert = isInvert,
+                    ButtonType = buttonType,
+                    AxisType = axisType,
+                    AxisCharacteristic = axisCharacteristic,
+                    MaxOutputPercent = maxOutputPercent,
+                    AxisDeadZonePercent = axisDeadZonePercent,
+                    ChannelOutputType = channelOutputType,
+                    MaxServoAngle = maxServoAngle,
+                    ServoBaseAngle = servoBaseAngle,
+                    StepperAngle = stepperAngle,
+                    SequenceName = sequenceName,
+                    ControllerModeName = controllerModeName,
+                    ControllerActionModeFilters = controllerActionModeFilters
+                };
+                await _creationRepository.InsertControllerActionAsync(controllerEvent, controllerAction);
                 return controllerAction;
             }
         }
@@ -224,18 +208,12 @@ namespace BrickController2.CreationManagement
             int maxServoAngle,
             int servoBaseAngle,
             int stepperAngle,
-            string sequenceName)
+            string sequenceName,
+            string controllerModeName,
+            Dictionary<string, ControllerActionModeFilterType> controllerActionModeFilters)
         {
             using (await _asyncLock.LockAsync())
             {
-                var otherControllerAction = controllerAction.ControllerEvent.ControllerActions.FirstOrDefault(ca => ca.Id != controllerAction.Id && ca.DeviceId == deviceId && ca.Channel == channel);
-                if (otherControllerAction != null)
-                {
-                    var parent = otherControllerAction.ControllerEvent;
-                    await _creationRepository.DeleteControllerActionAsync(otherControllerAction);
-                    parent.ControllerActions.Remove(otherControllerAction);
-                }
-
                 controllerAction.DeviceId = deviceId;
                 controllerAction.Channel = channel;
                 controllerAction.IsInvert = isInvert;
@@ -249,6 +227,8 @@ namespace BrickController2.CreationManagement
                 controllerAction.ServoBaseAngle = servoBaseAngle;
                 controllerAction.StepperAngle = stepperAngle;
                 controllerAction.SequenceName = sequenceName;
+                controllerAction.ControllerModeName = controllerModeName;
+                controllerAction.ControllerActionModeFilters = controllerActionModeFilters;
                 await _creationRepository.UpdateControllerActionAsync(controllerAction);
             }
         }
@@ -312,7 +292,9 @@ namespace BrickController2.CreationManagement
                                         controllerAction.MaxServoAngle,
                                         controllerAction.ServoBaseAngle,
                                         controllerAction.StepperAngle,
-                                        sequenceName);
+                                        sequenceName,
+                                        controllerAction.ControllerModeName,
+                                        controllerAction.ControllerActionModeFilters);
                                 }
                             }
                         }

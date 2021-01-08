@@ -314,7 +314,7 @@
                                         <ColumnDefinition Width="*"/>
                                         <!--    <ColumnDefinition Width="auto"/>  -->
                                     </Grid.ColumnDefinitions>
-                                    <Button Grid.Column="0" Text="{Binding Action.ModeName}" Command="{Binding SelectControllerModeCommand}" Style="{StaticResource PickerButtonStyle}"/>
+                                    <Button Grid.Column="0" Text="{Binding Action.ControllerModeName}" Command="{Binding SelectControllerModeCommand}" Style="{StaticResource PickerButtonStyle}"/>
                                     <!--<controls:FloatingActionButton Grid.Column="1" ButtonColor="Gray" ImageSource="{extensions:ImageResource Source=ic_settings.png}" ImageColor="White" Command="{Binding OpenSequenceEditorCommand}" VerticalOptions="Center"/>-->
                                 </Grid>
                             </Grid>
@@ -323,7 +323,7 @@
                         
                         <!-- Mode filters -->
                         <Label Text="{extensions:Translate ModeFilters}" FontSize="Medium" FontAttributes="Bold" Margin="0,5,0,5"/>
-                        <CollectionView ItemsSource="{Binding ModeFilters}"  SelectionMode="None">
+                        <CollectionView ItemsSource="{Binding ControllerActionModeFiltersViewModel}"  SelectionMode="None">
                             <CollectionView.ItemTemplate>
                                 <DataTemplate>
                                     <Grid Style="{StaticResource CollectionItemGridStyle}">
@@ -331,9 +331,9 @@
                                             <ColumnDefinition Width="2*"/>
                                             <ColumnDefinition Width="2*"/>
                                         </Grid.ColumnDefinitions>
-                                        <Label Grid.Column="0"  Text="{Binding Key}" VerticalOptions="Center" />
+                                        <Label Grid.Column="0"  Text="{Binding ControllerMode.Name}" VerticalOptions="Center" />
 
-                                        <Button Grid.Column="1" Text="{Binding Value, Converter={StaticResource ControllerModeState}}" Command="{Binding BindingContext.SelectModeFilterCommand, Source={x:Reference Page}}"  CommandParameter="{Binding Key}" Style="{StaticResource PickerButtonStyle}" />
+                                        <Button Grid.Column="1" Text="{Binding StateName}" Command="{Binding BindingContext.SelectModeFilterCommand, Source={x:Reference Page}}"  CommandParameter="{Binding .}" Style="{StaticResource PickerButtonStyle}" />
                                        
                                     </Grid>
                                 </DataTemplate>
