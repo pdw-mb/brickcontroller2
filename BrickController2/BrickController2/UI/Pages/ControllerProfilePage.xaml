@@ -90,7 +90,13 @@
                                     </Grid.ColumnDefinitions>
                                     <controls:ColorImage Grid.Column="0" Source="{extensions:ImageResource Source=ic_exclamation_mark.png}" Color="{DynamicResource NegativeColor}" IsVisible="{Binding ControllerActionValid, Converter={StaticResource InverseBool}}" WidthRequest="30" HeightRequest="30" VerticalOptions="Center"/>
                                     <StackLayout Grid.Column="1" Orientation="Horizontal" VerticalOptions="Center" Margin="0,4">
-                                        <Label Text="{extensions:Translate Device}"/>
+                                        <StackLayout.Triggers>
+                                            
+                                         <DataTrigger TargetType="StackLayout" Binding="{Binding IsModeSelectButtonType}" Value="true">
+                                            <Setter Property="IsVisible" Value="False"/>
+                                        </DataTrigger>
+                                            </StackLayout.Triggers>
+                                                <Label Text="{extensions:Translate Device}"/>
                                         <Label Text=": "/>
                                         <Label Text="{Binding DeviceName}" FontAttributes="Bold"/>
                                         <Label Text="{extensions:Translate ShortChannel}"/>
@@ -98,6 +104,16 @@
                                         <controls:DeviceChannelLabel DeviceType="{Binding DeviceType}" Channel="{Binding Channel}" FontAttributes="Bold"/>
                                         <Label Text=" - "/>
                                         <Label Text="{Binding InvertName}" FontAttributes="Bold"/>
+                                    </StackLayout>
+                                    <StackLayout Grid.Column="1" Orientation="Horizontal" VerticalOptions="Center" Margin="0,4">
+                                        <StackLayout.Triggers>
+                                            <DataTrigger TargetType="StackLayout" Binding="{Binding IsModeSelectButtonType}" Value="false">
+                                                <Setter Property="IsVisible" Value="False"/>
+                                            </DataTrigger>
+                                        </StackLayout.Triggers>
+                                        <Label Text="{Binding ButtonTypeName}"/>
+                                        <Label Text=": "/>
+                                        <Label Text="{Binding ModeName}" FontAttributes="Bold"/>
                                     </StackLayout>
                                 </Grid>
                             </SwipeView>

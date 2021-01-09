@@ -1,6 +1,7 @@
 ﻿using BrickController2.CreationManagement;
 using BrickController2.DeviceManagement;
 using BrickController2.PlatformServices.GameController;
+using BrickController2.Helpers;
 
 using System;
 using System.Collections.Generic;
@@ -16,9 +17,9 @@ namespace BrickController2.BusinessLogic
         private readonly ISequencePlayer _sequencePlayer;
 
         private readonly IDictionary<(string DeviceId, int Channel), float[]> _previousOutputs = new Dictionary<(string, int), float[]>();
-        private readonly IDictionary<(string EventCode, string DeviceId, int Channel), float> _previousAxisOutputs = new Dictionary<(string, string, int), float>();
+        private readonly IDictionary<(int ControllerActionId, string DeviceId, int Channel), float> _previousAxisOutputs = new Dictionary<(int, string, int), float>();
         private readonly IDictionary<(string DeviceId, int Channel), bool> _disabledOutputForAxises = new Dictionary<(string, int), bool>();
-        private readonly IDictionary<(string DeviceId, int Channel), IDictionary<(GameControllerEventType EventType, string EventCode), float>> _axisOutputValues = new Dictionary<(string, int), IDictionary<(GameControllerEventType, string), float>>();
+        private readonly IDictionary<(string DeviceId, int Channel), IDictionary<int, float>> _axisOutputValues = new Dictionary<(string, int), IDictionary<int, float>>();
 
         public PlayLogic(
             ICreationManager creationManager,
@@ -86,13 +87,37 @@ namespace BrickController2.BusinessLogic
 
         }
 
+        private (bool, bool) GetEffectiveModeState(ControllerAction controllerAction)
+        {
+            bool inactive = false;
+            bool hold = false;
+
+            foreach (var ms in ControllerModeStates)
+            {
+                ControllerActionModeFilterType mf;
+                if (controllerAction.ControllerActionModeFilters.TryGetValue(ms.Name, out mf))
+                {
+                    if (mf == ControllerActionModeFilterType.WhenOn && ms.State == false || mf == ControllerActionModeFilterType.WhenOff && ms.State == true)
+                    {
+                        inactive = true;
+                    }
+                    if (mf == ControllerActionModeFilterType.WhenOnThenHold && ms.State == false || mf == ControllerActionModeFilterType.WhenOffThenHold && ms.State == true)
+                    {
+                        inactive = true;
+                        hold = true;
+                    }
+                }
+            }
+            return (inactive, hold);
+        }
+
         public void ProcessGameControllerEvent(GameControllerEventArgs e)
         {
             if (ActiveProfile == null)
             {
                 return;
             }
-
+            HashSet<(string, int)> updatedOutputs = new HashSet<(string, int)>();
             foreach (var gameControllerEvent in e.ControllerEvents)
             {
                 foreach (var controllerEvent in ActiveProfile.ControllerEvents)
@@ -105,19 +130,7 @@ namespace BrickController2.BusinessLogic
                             var device = _deviceManager.GetDeviceById(controllerAction.DeviceId);
                             var channel = controllerAction.Channel;
 
-                            bool ignore = false;
-                            foreach (var mf in controllerAction.ControllerActionModeFilters)
-                            {
-                                var ms = ControllerModeStates.First(ms => ms.Name == mf.Key);
-                                if (mf.Value == ControllerActionModeFilterType.WhenOn && !ms.State || mf.Value == ControllerActionModeFilterType.WhenOff && ms.State)
-                                {
-                                    ignore = true;
-                                }
-                            }
-                            if (ignore)
-                            {
-                                continue;
-                            }
+                            
                             if (gameControllerEvent.Key.EventType == GameControllerEventType.Button)
                             {
                                 var isPressed = gameControllerEvent.Value > 0.5;
@@ -134,20 +147,28 @@ namespace BrickController2.BusinessLogic
                                 var (useAxisValue, axisValue) = ProcessAxisEvent(gameControllerEvent.Key.EventCode, gameControllerEvent.Value, controllerAction, device.DeviceType);
                                 if (useAxisValue)
                                 {
-                                    StoreAxisOutputValue(axisValue, controllerAction.DeviceId, controllerAction.Channel, controllerEvent.EventType, controllerEvent.EventCode);
-                                    var outputValue = CombineAxisOutputValues(controllerAction.DeviceId, controllerAction.Channel);
-                                    device.SetOutput(channel, outputValue);
+                                    StoreAxisOutputValue(axisValue, controllerAction.DeviceId, controllerAction.Channel, controllerAction);
+                                    updatedOutputs.Add((controllerAction.DeviceId, controllerAction.Channel));
+                                    
                                 }
                             }
                         }
                     }
                 }
             }
+            foreach (var (deviceId, channel) in updatedOutputs)
+            {
+                var device = _deviceManager.GetDeviceById(deviceId);
+                var outputValue = CombineAxisOutputValues(deviceId, channel);
+                device.SetOutput(channel, outputValue);
+            }
         }
         
         private static bool ShouldProcessButtonEvent(bool isPressed, ControllerAction controllerAction)
         {
-            return controllerAction.ButtonType == ControllerButtonType.Normal || isPressed;
+            return controllerAction.ButtonType == ControllerButtonType.Normal || 
+                   controllerAction.ButtonType == ControllerButtonType.SetMode || 
+                   isPressed;
         }
 
         private float ProcessButtonEvent(bool isPressed, ControllerAction controllerAction, DeviceType deviceType)
@@ -220,6 +241,11 @@ namespace BrickController2.BusinessLogic
                     cms.State = !cms.State;
                     break;
 
+                case ControllerButtonType.SetMode:
+                    cms = ControllerModeStates.First(cms => cms.Name == controllerAction.ControllerModeName);
+                    cms.State = isPressed;
+                    break;
+
             }
 
             SetPreviousOutput(controllerAction, currentOutput);
@@ -249,7 +275,12 @@ namespace BrickController2.BusinessLogic
 
         private (bool UseAxisValue, float AxisValue) ProcessAxisEvent(string gameControllerEventCode, float axisValue, ControllerAction controllerAction, DeviceType deviceType)
         {
-            var previousAxisValue = GetPreviousAxisOutput(gameControllerEventCode, controllerAction);
+            var previousAxisValue = GetPreviousAxisOutput(controllerAction);
+            var (inactive, hold) = GetEffectiveModeState(controllerAction);
+            if (inactive)
+            {
+                return (true, hold ? previousAxisValue : 0); 
+            }
 
             axisValue = controllerAction.IsInvert ? -axisValue : axisValue;
 
@@ -362,41 +393,41 @@ namespace BrickController2.BusinessLogic
 
             if (useAxisValue)
             {
-                SetPreviousAxisOutput(gameControllerEventCode, controllerAction, axisValue);
+                SetPreviousAxisOutput(controllerAction, axisValue);
                 axisValue = AdjustOutputValue(axisValue, controllerAction);
             }
 
             return (useAxisValue, axisValue);
         }
 
-        private float GetPreviousAxisOutput(string gameControllerEventCode, ControllerAction controllerAction)
+        private float GetPreviousAxisOutput(ControllerAction controllerAction)
         {
-            if (_previousAxisOutputs.ContainsKey((gameControllerEventCode, controllerAction.DeviceId, controllerAction.Channel)))
+            if (_previousAxisOutputs.ContainsKey((controllerAction.Id, controllerAction.DeviceId, controllerAction.Channel)))
             {
-                return _previousAxisOutputs[(gameControllerEventCode, controllerAction.DeviceId, controllerAction.Channel)];
+                return _previousAxisOutputs[(controllerAction.Id, controllerAction.DeviceId, controllerAction.Channel)];
             }
             else
             {
                 var prevOutput = 0.0f;
-                _previousAxisOutputs[(gameControllerEventCode, controllerAction.DeviceId, controllerAction.Channel)] = prevOutput;
+                _previousAxisOutputs[(controllerAction.Id, controllerAction.DeviceId, controllerAction.Channel)] = prevOutput;
                 return prevOutput;
             }
         }
 
-        private void SetPreviousAxisOutput(string gameControllerEventCode, ControllerAction controllerAction, float value)
+        private void SetPreviousAxisOutput(ControllerAction controllerAction, float value)
         {
-            _previousAxisOutputs[(gameControllerEventCode, controllerAction.DeviceId, controllerAction.Channel)] = value;
+            _previousAxisOutputs[(controllerAction.Id, controllerAction.DeviceId, controllerAction.Channel)] = value;
         }
 
-        private void StoreAxisOutputValue(float outputValue, string deviceId, int channel, GameControllerEventType controllerEventType, string controllerEventCode)
+        private void StoreAxisOutputValue(float outputValue, string deviceId, int channel, ControllerAction controllerAction)
         {
             var axisOutputValuesKey = (deviceId, channel);
             if (!_axisOutputValues.ContainsKey(axisOutputValuesKey))
             {
-                _axisOutputValues[axisOutputValuesKey] = new Dictionary<(GameControllerEventType, string), float>();
+                _axisOutputValues[axisOutputValuesKey] = new Dictionary<int, float>();
             }
 
-            _axisOutputValues[axisOutputValuesKey][(controllerEventType, controllerEventCode)] = outputValue;
+            _axisOutputValues[axisOutputValuesKey][controllerAction.Id] = outputValue;
         }
 
         private bool GetIsOutputDisableForAxises(ControllerAction controllerAction)

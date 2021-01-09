@@ -282,6 +282,9 @@ namespace BrickController2.UI.ViewModels
                 DeviceType = device != null ? device.DeviceType : DeviceType.Unknown;
                 Channel = controllerAction.Channel;
                 InvertName = controllerAction.IsInvert ? Translate("Inv") : string.Empty;
+                IsModeSelectButtonType = controllerAction.IsModeSelectButtonType;
+                ButtonTypeName = Translate(Enum.GetName(typeof(ControllerButtonType), controllerAction.ButtonType));
+                ModeName = controllerAction.ControllerModeName;
             }
 
             public ControllerAction ControllerAction { get; }
@@ -290,6 +293,11 @@ namespace BrickController2.UI.ViewModels
             public DeviceType DeviceType { get; }
             public int Channel { get; }
             public string InvertName { get; }
+
+            public bool IsModeSelectButtonType { get; }
+
+            public string ButtonTypeName { get; }
+            public string ModeName { get;  }
 
             private string Translate(string key) => _translationService.Translate(key);
         }

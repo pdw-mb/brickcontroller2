@@ -8,6 +8,8 @@ namespace BrickController2.CreationManagement
     {
         Ignore,
         WhenOn,
-        WhenOff
+        WhenOff,
+        WhenOnThenHold,
+        WhenOffThenHold
     }
 }

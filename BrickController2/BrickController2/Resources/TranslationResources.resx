@@ -444,6 +444,9 @@
   <data name="ServoAngle" xml:space="preserve">
     <value>Servo range</value>
   </data>
+  <data name="SetMode" xml:space="preserve">
+    <value>Set Mode</value>
+  </data>
   <data name="Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
@@ -458,6 +461,9 @@
   </data>
   <data name="Theme" xml:space="preserve">
     <value>Theme</value>
+  </data>
+  <data name="ToggleMode" xml:space="preserve">
+    <value>Toggle Mode</value>
   </data>
   <data name="TurnOnBluetoothToConnect" xml:space="preserve">
     <value>Turn bluetooth on to connect to a bluetooth device.</value>

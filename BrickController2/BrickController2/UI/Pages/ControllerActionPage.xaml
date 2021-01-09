@@ -56,7 +56,7 @@
 
                         <StackLayout Orientation="Vertical" IsVisible="True">
                             <StackLayout.Triggers>
-                                <DataTrigger TargetType="StackLayout" Binding="{Binding Action.ButtonType}" Value="{x:Static creationManagement:ControllerButtonType.ToggleMode}">
+                                <DataTrigger TargetType="StackLayout" Binding="{Binding IsModeSelectButtonType}" Value="true">
                                     <Setter Property="IsVisible" Value="False"/>
                                 </DataTrigger>
                             </StackLayout.Triggers>
@@ -309,11 +309,14 @@
                                     </Grid>
 
                                     <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
+                                </StackLayout>
+                            <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
                         </StackLayout>
+
                         <!-- Mode selector -->
                         <StackLayout Orientation="Vertical" IsVisible="False">
                             <StackLayout.Triggers>
-                                <DataTrigger TargetType="StackLayout" Binding="{Binding Action.ButtonType}" Value="{x:Static creationManagement:ControllerButtonType.ToggleMode}">
+                                <DataTrigger TargetType="StackLayout" Binding="{Binding IsModeSelectButtonType}" Value="true">
                                     <Setter Property="IsVisible" Value="True"/>
                                 </DataTrigger>
                             </StackLayout.Triggers>
@@ -356,9 +359,7 @@
                         </CollectionView>
                        
 
-                            <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="5,8,5,8"/>
-                        </StackLayout>
-
+                     
                     </StackLayout>
                 </ScrollView>
 

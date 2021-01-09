@@ -163,6 +163,8 @@ namespace BrickController2.UI.ViewModels
         public ICommand SelectAxisCharacteristicCommand { get; }
         public ICommand SelectModeFilterCommand { get; }
 
+        public bool IsModeSelectButtonType { get { return Action.ButtonType == ControllerButtonType.SetMode || Action.ButtonType == ControllerButtonType.ToggleMode; } }
+
         public override void OnAppearing()
         {
             _disappearingTokenSource?.Cancel();
@@ -299,6 +301,7 @@ namespace BrickController2.UI.ViewModels
             if (result.IsOk)
             {
                 Action.ButtonType = (ControllerButtonType)Enum.Parse(typeof(ControllerButtonType), result.SelectedItem);
+                RaisePropertyChanged(nameof(IsModeSelectButtonType));
             }
         }
 
@@ -431,7 +434,7 @@ namespace BrickController2.UI.ViewModels
                 set { 
                     _state = value; 
                     RaisePropertyChanged();
-                    RaisePropertyChanged("StateName");
+                    RaisePropertyChanged(nameof(StateName));
                 } 
             }
 

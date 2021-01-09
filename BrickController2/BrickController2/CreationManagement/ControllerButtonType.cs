@@ -10,6 +10,7 @@
         Stop,
         Accelerator,
         Sequence,
-        ToggleMode
+        ToggleMode,
+        SetMode
     }
 }

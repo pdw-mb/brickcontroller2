@@ -60,7 +60,12 @@ namespace BrickController2.CreationManagement
         public ControllerButtonType ButtonType
         {
             get { return _buttonType; }
-            set { _buttonType = value; RaisePropertyChanged(); }
+            set { _buttonType = value; RaisePropertyChanged(); RaisePropertyChanged(nameof(IsModeSelectButtonType)); }
+        }
+
+        public bool IsModeSelectButtonType
+        {
+            get { return _buttonType == ControllerButtonType.ToggleMode || _buttonType == ControllerButtonType.SetMode; }
         }
 
         public ControllerAxisType AxisType

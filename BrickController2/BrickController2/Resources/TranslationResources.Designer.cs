@@ -1042,6 +1042,15 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Set Mode.
+        /// </summary>
+        internal static string SetMode {
+            get {
+                return ResourceManager.GetString("SetMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Settings.
         /// </summary>
         internal static string Settings {
@@ -1083,6 +1092,15 @@ namespace BrickController2.Resources {
         internal static string Theme {
             get {
                 return ResourceManager.GetString("Theme", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Toggle Mode.
+        /// </summary>
+        internal static string ToggleMode {
+            get {
+                return ResourceManager.GetString("ToggleMode", resourceCulture);
             }
         }
         
