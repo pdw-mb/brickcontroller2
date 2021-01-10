@@ -147,6 +147,9 @@
   <data name="AreYouSureToDeleteControllerEvent" xml:space="preserve">
     <value>Are you sure to delete controller event</value>
   </data>
+  <data name="AreYouSureToDeleteControllerMode" xml:space="preserve">
+    <value>Are you sure you wish to delete this mode?</value>
+  </data>
   <data name="AreYouSureToDeleteControlPoint" xml:space="preserve">
     <value>Are you sure to delete this control point?</value>
   </data>
@@ -344,6 +347,9 @@
   </data>
   <data name="Missing" xml:space="preserve">
     <value>Missing</value>
+  </data>
+  <data name="MissingControllerMode" xml:space="preserve">
+    <value>There are missing controller modes</value>
   </data>
   <data name="MissingDevices" xml:space="preserve">
     <value>There are missing devices in the creation setup.</value>

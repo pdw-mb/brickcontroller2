@@ -328,5 +328,35 @@ namespace BrickController2.CreationManagement
             }
         }
 
+        public async Task DeleteControllerModeAsync(ControllerMode controllerMode)
+        {
+            using (await _asyncLock.LockAsync())
+            {
+                foreach (var controllerEvent in controllerMode.ControllerProfile.ControllerEvents)
+                {
+                    foreach (var controllerAction in controllerEvent.ControllerActions)
+                    {
+                        bool updated = false;
+                        if (controllerAction.ControllerModeName == controllerMode.Name)
+                        {
+                            controllerAction.ControllerModeName = "";
+                            updated = true;
+                        }
+                        if (controllerAction.ControllerActionModeFilters.Remove(controllerMode.Name))
+                        {
+                            updated = true;
+                        }
+                        if (updated) { 
+                            await _creationRepository.UpdateControllerActionAsync(controllerAction);
+                        }
+                    }
+
+                }
+                
+                await _creationRepository.DeleteControllerModeAsync(controllerMode);
+                controllerMode.ControllerProfile.ControllerModes.Remove(controllerMode);
+            }
+        }
+
     }
 }

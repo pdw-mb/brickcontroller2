@@ -38,7 +38,7 @@ namespace BrickController2.UI.ViewModels
 
             AddControllerModeCommand = new SafeCommand(async () => await AddControllerModeAsync());
             //SequenceTappedCommand = new SafeCommand<Sequence>(async sequence => await NavigationService.NavigateToAsync<SequenceEditorPageViewModel>(new NavigationParameters(("sequence", sequence))));
-            //DeleteSequenceCommand = new SafeCommand<Sequence>(async (sequence) => await DeleteSequenceAsync(sequence));
+            DeleteControllerModeCommand = new SafeCommand<ControllerMode>(async (controllerMode) => await DeleteControllerModeAsync(controllerMode));
         }
         public override void OnAppearing()
         {
@@ -98,6 +98,28 @@ namespace BrickController2.UI.ViewModels
                         Translate("Creating"));
 
                     //await NavigationService.NavigateToAsync<SequenceEditorPageViewModel>(new NavigationParameters(("sequence", sequence)));
+                }
+            }
+            catch (OperationCanceledException)
+            {
+            }
+        }
+
+        private async Task DeleteControllerModeAsync(ControllerMode controllerMode)
+        {
+            try
+            {
+                if (await _dialogService.ShowQuestionDialogAsync(
+                    Translate("Confirm"),
+                    $"{Translate("AreYouSureToDeleteControllerMode")} '{controllerMode.Name}'?",
+                    Translate("Yes"),
+                    Translate("No"),
+                    _disappearingTokenSource.Token))
+                {
+                    await _dialogService.ShowProgressDialogAsync(
+                        false,
+                        async (progressDialog, token) => await _creationManager.DeleteControllerModeAsync(controllerMode),
+                        Translate("Deleting"));
                 }
             }
             catch (OperationCanceledException)

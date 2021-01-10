@@ -29,5 +29,7 @@ namespace BrickController2.CreationManagement
         Task DeleteSequenceAsync(Sequence sequence);
 
         Task InsertControllerModeAsync(ControllerProfile controllerProfile, ControllerMode controllerMode);
+        Task DeleteControllerModeAsync(ControllerMode controllerMode);
+
     }
 }

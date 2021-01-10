@@ -55,8 +55,35 @@ namespace BrickController2.BusinessLogic
             {
                 return CreationValidationResult.MissingSequence;
             }
+            else if (!ValidateControllerModeNames(creation))
+            {
+                return CreationValidationResult.MissingControllerMode;
+            }
 
             return CreationValidationResult.Ok;
+        }
+
+        public bool ValidateControllerModeNames(Creation creation)
+        {
+            foreach (var controllerProfile in creation.ControllerProfiles)
+            {
+                var modeNames = controllerProfile.ControllerModes;
+
+                foreach (var controllerEvent in controllerProfile.ControllerEvents)
+                {
+                    foreach (var controllerAction in controllerEvent.ControllerActions)
+                    {
+                        if (controllerAction.IsModeSelectButtonType && controllerProfile.ControllerModes.FirstOrDefault(cm => cm.Name == controllerAction.ControllerModeName) == null)
+                        {
+                            {
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }
+            return true;
+
         }
 
         public bool ValidateControllerAction(ControllerAction controllerAction)

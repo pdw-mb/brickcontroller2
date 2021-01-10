@@ -216,5 +216,13 @@ namespace BrickController2.CreationManagement
             }
         }
 
+        public async Task DeleteControllerModeAsync(ControllerMode controllerMode)
+        {
+            using (await _lock.LockAsync())
+            {
+                await _databaseConnection.DeleteAsync(controllerMode, true);
+            }
+        }
+
     }
 }

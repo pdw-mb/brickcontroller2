@@ -151,6 +151,15 @@ namespace BrickController2.Resources {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Are you sure you wish to delete this mode?.
+        /// </summary>
+        internal static string AreYouSureToDeleteControllerMode {
+            get {
+                return ResourceManager.GetString("AreYouSureToDeleteControllerMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to Are you sure to delete this control point?.
         /// </summary>
         internal static string AreYouSureToDeleteControlPoint {
@@ -741,6 +750,15 @@ namespace BrickController2.Resources {
         internal static string Missing {
             get {
                 return ResourceManager.GetString("Missing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to There are missing controller modes.
+        /// </summary>
+        internal static string MissingControllerMode {
+            get {
+                return ResourceManager.GetString("MissingControllerMode", resourceCulture);
             }
         }
         

@@ -70,5 +70,8 @@ namespace BrickController2.CreationManagement
 
         Task<ControllerMode> AddControllerModeAsync(ControllerProfile profile, string modeName);
 
+        Task DeleteControllerModeAsync(ControllerMode controllerMode);
+
+
     }
 }
