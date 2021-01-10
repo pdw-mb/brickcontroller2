@@ -20,6 +20,7 @@ namespace BrickController2.BusinessLogic
         private readonly IDictionary<(int ControllerActionId, string DeviceId, int Channel), float> _previousAxisOutputs = new Dictionary<(int, string, int), float>();
         private readonly IDictionary<(string DeviceId, int Channel), bool> _disabledOutputForAxises = new Dictionary<(string, int), bool>();
         private readonly IDictionary<(string DeviceId, int Channel), IDictionary<int, float>> _axisOutputValues = new Dictionary<(string, int), IDictionary<int, float>>();
+        private readonly IDictionary<ControllerAction, float> _controllerInputValues = new Dictionary<ControllerAction, float>();
 
         public PlayLogic(
             ICreationManager creationManager,
@@ -144,12 +145,12 @@ namespace BrickController2.BusinessLogic
                             }
                             else if (gameControllerEvent.Key.EventType == GameControllerEventType.Axis)
                             {
-                                var (useAxisValue, axisValue) = ProcessAxisEvent(gameControllerEvent.Key.EventCode, gameControllerEvent.Value, controllerAction, device.DeviceType);
+                                _controllerInputValues[controllerAction] = gameControllerEvent.Value;
+                                var (useAxisValue, axisValue) = ProcessAxisEvent(gameControllerEvent.Value, controllerAction, device.DeviceType);
                                 if (useAxisValue)
                                 {
-                                    StoreAxisOutputValue(axisValue, controllerAction.DeviceId, controllerAction.Channel, controllerAction);
-                                    updatedOutputs.Add((controllerAction.DeviceId, controllerAction.Channel));
-                                    
+                                    StoreAxisOutputValue(axisValue, controllerAction);
+                                    updatedOutputs.Add((controllerAction.DeviceId, controllerAction.Channel));                             
                                 }
                             }
                         }
@@ -239,11 +240,12 @@ namespace BrickController2.BusinessLogic
                 case ControllerButtonType.ToggleMode:
                     var cms = ControllerModeStates.First(cms => cms.Name == controllerAction.ControllerModeName);
                     cms.State = !cms.State;
+                    ReplayLastAxisInputs();
                     break;
 
                 case ControllerButtonType.SetMode:
-                    cms = ControllerModeStates.First(cms => cms.Name == controllerAction.ControllerModeName);
-                    cms.State = isPressed;
+                    ControllerModeStates.First(cms => cms.Name == controllerAction.ControllerModeName).State = isPressed;
+                    ReplayLastAxisInputs();
                     break;
 
             }
@@ -273,7 +275,7 @@ namespace BrickController2.BusinessLogic
             buttonOutputs[0] = value;
         }
 
-        private (bool UseAxisValue, float AxisValue) ProcessAxisEvent(string gameControllerEventCode, float axisValue, ControllerAction controllerAction, DeviceType deviceType)
+        private (bool UseAxisValue, float AxisValue) ProcessAxisEvent(float axisValue, ControllerAction controllerAction, DeviceType deviceType)
         {
             var previousAxisValue = GetPreviousAxisOutput(controllerAction);
             var (inactive, hold) = GetEffectiveModeState(controllerAction);
@@ -289,6 +291,7 @@ namespace BrickController2.BusinessLogic
             {
                 if (Math.Abs(axisValue) <= axisDeadZone)
                 {
+                    SetPreviousAxisOutput(controllerAction, 0);
                     return (true, 0);
                 }
 
@@ -419,15 +422,43 @@ namespace BrickController2.BusinessLogic
             _previousAxisOutputs[(controllerAction.Id, controllerAction.DeviceId, controllerAction.Channel)] = value;
         }
 
-        private void StoreAxisOutputValue(float outputValue, string deviceId, int channel, ControllerAction controllerAction)
+        private void StoreAxisOutputValue(float outputValue, ControllerAction controllerAction)
         {
-            var axisOutputValuesKey = (deviceId, channel);
+            /* This is the current contribution to an output from a 
+             * ControllerAction.  All such contributions are added to get the
+             * actual output required */
+
+            var axisOutputValuesKey = (controllerAction.DeviceId, controllerAction.Channel);
             if (!_axisOutputValues.ContainsKey(axisOutputValuesKey))
             {
                 _axisOutputValues[axisOutputValuesKey] = new Dictionary<int, float>();
             }
-
             _axisOutputValues[axisOutputValuesKey][controllerAction.Id] = outputValue;
+        }
+
+        /* When a mode change occurs, replay the last input value on each axis
+         * so that the effect is immediate, rather than waiting for the next event
+         */
+        private void ReplayLastAxisInputs()
+        {
+            HashSet<(string, int)> updatedOutputs = new HashSet<(string, int)>();
+            foreach (var input in _controllerInputValues)
+            {
+                var controllerAction = input.Key;
+                var device = _deviceManager.GetDeviceById(controllerAction.DeviceId);
+                var (useAxisValue, axisValue) = ProcessAxisEvent(input.Value, controllerAction, device.DeviceType);
+                if (useAxisValue)
+                {
+                    StoreAxisOutputValue(axisValue, controllerAction);
+                    updatedOutputs.Add((controllerAction.DeviceId, controllerAction.Channel));
+                }
+            }
+            foreach (var (deviceId, channel) in updatedOutputs)
+            {
+                var device = _deviceManager.GetDeviceById(deviceId);
+                var outputValue = CombineAxisOutputValues(deviceId, channel);
+                device.SetOutput(channel, outputValue);
+            }
         }
 
         private bool GetIsOutputDisableForAxises(ControllerAction controllerAction)
@@ -462,11 +493,11 @@ namespace BrickController2.BusinessLogic
             }
 
             var result = 0.0F;
+
             foreach (var outputValue in _axisOutputValues[axisOutputValuesKey].Values)
             {
                 result += outputValue;
             }
-
             return Math.Max(-1.0F, Math.Min(1.0F, result));
         }
 
