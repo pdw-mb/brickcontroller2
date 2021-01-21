@@ -46,6 +46,7 @@ namespace BrickController2.UI.ViewModels
             RenameCommand = new SafeCommand(async () => await RenameDeviceAsync());
             BuWizzOutputLevelChangedCommand = new SafeCommand<int>(outputLevel => SetBuWizzOutputLevel(outputLevel));
             BuWizz2OutputLevelChangedCommand = new SafeCommand<int>(outputLevel => SetBuWizzOutputLevel(outputLevel));
+            SelectPWMModeCommand = new SafeCommand(async () => await SelectPWMModeAsync());
         }
 
         public Device Device { get; }
@@ -55,6 +56,7 @@ namespace BrickController2.UI.ViewModels
         public ICommand RenameCommand { get; }
         public ICommand BuWizzOutputLevelChangedCommand { get; }
         public ICommand BuWizz2OutputLevelChangedCommand { get; }
+        public ICommand SelectPWMModeCommand { get; }
 
         public int BuWizzOutputLevel { get; set; } = 1;
         public int BuWizz2OutputLevel { get; set; } = 1;
@@ -212,6 +214,26 @@ namespace BrickController2.UI.ViewModels
                     await Task.Delay(50);
                 }
             }
+        }
+
+        private async Task SelectPWMModeAsync()
+        {
+
+            var result = await _dialogService.ShowSelectionDialogAsync(
+                Enum.GetNames(typeof(PWMModeType)),
+                Translate("SelectPWMMode"),
+                Translate("Cancel"),
+                _disappearingTokenSource.Token);
+
+            if (result.IsOk)
+            {
+                await _dialogService.ShowProgressDialogAsync(
+                           false,
+                           async (progressDialog, token) => await Device.SetPWMModeAsync((PWMModeType)Enum.Parse(typeof(PWMModeType), result.SelectedItem), token),
+                           Translate("ChangingPWMMode"),
+                           token: _disappearingTokenSource.Token);
+            }
+
         }
 
         private void OnDeviceDisconnected(Device device)

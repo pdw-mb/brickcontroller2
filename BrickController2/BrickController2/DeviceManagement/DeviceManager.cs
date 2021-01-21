@@ -54,7 +54,7 @@ namespace BrickController2.DeviceManagement
                 var deviceDTOs = await _deviceRepository.GetDevicesAsync();
                 foreach (var deviceDTO in deviceDTOs)
                 {
-                    var device = _deviceFactory(deviceDTO.DeviceType, deviceDTO.Name, deviceDTO.Address, deviceDTO.DeviceData);
+                    var device = _deviceFactory(deviceDTO.DeviceType, deviceDTO.Name, deviceDTO.Address, deviceDTO.DeviceData, deviceDTO.PWMMode);
                     if (device != null)
                     {
                         Devices.Add(device);
@@ -97,7 +97,7 @@ namespace BrickController2.DeviceManagement
                         return;
                     }
 
-                    var device = _deviceFactory(deviceType, deviceName, deviceAddress, deviceData);
+                    var device = _deviceFactory(deviceType, deviceName, deviceAddress, deviceData, PWMModeType.Default);
                     if (device != null)
                     {
                         await _deviceRepository.InsertDeviceAsync(device.DeviceType, device.Name, device.Address, deviceData);

@@ -21,9 +21,8 @@ namespace BrickController2.DeviceManagement
 
         private readonly int[] _outputValues = new int[4];
         private readonly int[] _directions = new int[4];
-
+        private PWMModeType _pwmMode = PWMModeType.Default;
         private readonly object _outputLock = new object();
-
         private volatile int _sendAttemptsLeft;
 
         private IGattCharacteristic _firmwareRevisionCharacteristic;
@@ -31,16 +30,28 @@ namespace BrickController2.DeviceManagement
         private IGattCharacteristic _remoteControlCharacteristic;
         private IGattCharacteristic _quickDriveCharacteristic;
 
-        public SBrickDevice(string name, string address, byte[] deviceData, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
+        private int _hardwareMajorVersion;
+
+        public SBrickDevice(string name, string address, byte[] deviceData, PWMModeType pwmMode, IDeviceRepository deviceRepository, IBluetoothLEService bleService)
             : base(name, address, deviceRepository, bleService)
         {
+            _pwmMode = pwmMode;
+            _hardwareMajorVersion = GetHardwareVersionFromDeviceData(deviceData);
         }
 
         public override DeviceType DeviceType => DeviceType.SBrick;
         public override string BatteryVoltageSign => "V";
         public override int NumberOfChannels => 4;
         protected override bool AutoConnectOnFirstConnect => false;
-
+        public override PWMModeType PWMMode
+        {
+            get { return _pwmMode; }
+            set { _pwmMode = value; RaisePropertyChanged(); }
+        }
+        public override bool CanSetPWMFrequency
+        {
+            get { return _hardwareMajorVersion == 5 || (_hardwareMajorVersion >= 11 && _hardwareMajorVersion <= 13); }
+        }
         public override void SetOutput(int channel, float value)
         {
             CheckChannel(channel);
@@ -88,6 +99,7 @@ namespace BrickController2.DeviceManagement
                 {
                     await ReadDeviceInfo(token).ConfigureAwait(false);
                 }
+                await SendPWMModeAsync(PWMMode, token);
             }
             catch { }
 
@@ -184,6 +196,80 @@ namespace BrickController2.DeviceManagement
                 var rawVoltage = voltageBuffer[0] + (voltageBuffer[1] << 8);
                 var voltage = (rawVoltage * 0.83875F) / 2047;
                 BatteryVoltage = voltage.ToString("F2");
+            }
+        }
+
+        private int GetHardwareVersionFromDeviceData(byte[] deviceData)
+        {
+            int i = 2;
+            while (i < deviceData.Length - 1)
+            {
+                int recordLength = deviceData[i];
+                if (i + recordLength > deviceData.Length || recordLength == 0)
+                {
+                    return 0;
+                }
+                // Product Type record: 0x00, Product ID, h/w major, h/w minor, f/w major, f/w minor
+                if (deviceData[i + 1] == 0 && recordLength > 4)
+                {
+                    return deviceData[i + 3];
+                }
+                i += recordLength;
+            }
+            return 0;
+        }
+
+        private UInt16 PWMCounterValue()
+        {
+            switch (_hardwareMajorVersion) {
+                case 5:
+                case 11:
+                    switch (PWMMode)
+                    {
+                        case PWMModeType.Default:
+                            return 3823;
+                        case PWMModeType.LowFrequency:
+                            return 0xFFFE;
+                        case PWMModeType.HighFrequency:
+                            return 1500;
+                    }
+                    break;
+                case 12:
+                case 13:
+                    switch (PWMMode)
+                    {
+                        case PWMModeType.Default:
+                            return 4588;
+                        case PWMModeType.LowFrequency:
+                            return 0xFFFE;
+                        case PWMModeType.HighFrequency:
+                            return 1500;
+                    }
+                    break;
+            }
+            return 0;
+        }
+
+        public async override Task SendPWMModeAsync(PWMModeType pwmMode, CancellationToken token)
+        {
+            if (CanSetPWMFrequency)
+            {
+
+                try
+                {
+                    UInt16 pwmCounterValue = PWMCounterValue();
+                    var sendOutputBuffer = new byte[]
+                    {
+                    0x1F,
+                    (byte)(pwmCounterValue & 0xFF),
+                    (byte)(pwmCounterValue >> 8)
+                    };
+
+                    await _bleDevice?.WriteAsync(_remoteControlCharacteristic, sendOutputBuffer, token);
+                }
+                catch
+                {
+                }
             }
         }
     }

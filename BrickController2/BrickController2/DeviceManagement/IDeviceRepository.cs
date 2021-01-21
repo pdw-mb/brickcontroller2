@@ -9,6 +9,6 @@ namespace BrickController2.DeviceManagement
         Task InsertDeviceAsync(DeviceType type, string name, string address, byte[] manufacturerData);
         Task DeleteDeviceAsync(DeviceType type, string address);
         Task DeleteDevicesAsync();
-        Task UpdateDeviceAsync(DeviceType type, string address, string newName);
+        Task UpdateDeviceAsync(DeviceType type, string address, string newName, PWMModeType pwmMode);
     }
 }

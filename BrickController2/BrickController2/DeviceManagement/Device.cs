@@ -99,13 +99,31 @@ namespace BrickController2.DeviceManagement
 
         public virtual bool CanBePowerSource => false;
 
+        public virtual bool CanSetPWMFrequency => false;
+
+        public virtual PWMModeType PWMMode { get; set; }
         public async Task RenameDeviceAsync(Device device, string newName)
         {
             using (await _asyncLock.LockAsync())
             {
-                await _deviceRepository.UpdateDeviceAsync(device.DeviceType, device.Address, newName);
+                await _deviceRepository.UpdateDeviceAsync(device.DeviceType, device.Address, newName, device.PWMMode);
                 device.Name = newName;
             }
+        }
+
+        public async Task SetPWMModeAsync(PWMModeType pwmMode, CancellationToken token)
+        {
+            using (await _asyncLock.LockAsync())
+            {
+                await _deviceRepository.UpdateDeviceAsync(DeviceType, Address, Name, pwmMode);
+                PWMMode = pwmMode;
+                await SendPWMModeAsync(pwmMode, token);
+            }
+        }
+
+        public virtual Task SendPWMModeAsync(PWMModeType pwmMode, CancellationToken token)
+        {
+            return Task.FromResult(false);
         }
 
         public override string ToString()

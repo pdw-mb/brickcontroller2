@@ -68,7 +68,7 @@ namespace BrickController2.DeviceManagement
             }
         }
 
-        public async Task UpdateDeviceAsync(DeviceType type, string address, string newName)
+        public async Task UpdateDeviceAsync(DeviceType type, string address, string newName, PWMModeType pwmMode)
         {
             using (await _lock.LockAsync())
             {
@@ -76,6 +76,7 @@ namespace BrickController2.DeviceManagement
                 if (device != null)
                 {
                     device.Name = newName;
+                    device.PWMMode = pwmMode;
                     await _databaseConnection.UpdateAsync(device);
                 }
             }

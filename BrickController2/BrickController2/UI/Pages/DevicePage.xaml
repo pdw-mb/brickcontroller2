@@ -126,6 +126,23 @@
                                 </BindableLayout.ItemTemplate>
                             </StackLayout>
                         </StackLayout>
+                        <StackLayout Orientation="Vertical" IsVisible="False">
+                            <StackLayout.Triggers>
+                                <DataTrigger TargetType="StackLayout" Binding="{Binding Device.CanSetPWMFrequency}" Value="True">
+                                    <Setter Property="IsVisible" Value="True"/>
+                                </DataTrigger>
+                            </StackLayout.Triggers>
+                            <BoxView Style="{StaticResource DividerBoxViewStyle}" Margin="0,4,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="2*"/>
+                                    <ColumnDefinition Width="3*"/>
+                                </Grid.ColumnDefinitions>
+
+                                <Label Grid.Column="0" Text="{extensions:Translate PWMMode}" VerticalOptions="Center"/>
+                                <Button Grid.Column="1" Text="{Binding Device.PWMMode}" Command="{Binding SelectPWMModeCommand}" Style="{StaticResource PickerButtonStyle}"/>
+                            </Grid>
+                        </StackLayout>
 
                     </StackLayout>
                 </ScrollView>
